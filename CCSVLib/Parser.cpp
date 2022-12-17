@@ -24,40 +24,37 @@ bool parse_record(Reader& reader, std::span<std::string_view> storage, std::span
         while (true) {
             char ch = reader.peek();
             
-            if (ch == ',' || ch == '\r' || ch == '\0') {
+            if (ch == '\0') {
+                //End of data
+                return false;
+            }
+            
+            if (ch == ',' || ch == '\r') {
                 //End of field.
                 reader.mark_end();
                 
                 storage[field_index] = reader.segment();
-                                
+                
+                //Eat the last char
+                reader.pop();
+                
                 if (ch == ',') {
-                    //Eat the comma
-                    reader.pop();
-
                     //We have more fields
                     ++field_index;
                     break;
                 } else {
+                    //Read \n
+                    reader.pop();
+
                     //End of record
                     record = storage.subspan(0, field_index + 1);
-                    
-                    if (ch == '\r') {
-                        //Read \r
-                        reader.pop();
-                        //Read \n
-                        reader.pop();
-                        
-                        return true;
-                    } else {
-                        //End of file
-                        return false;
-                    }
+
+                    return true;
                 }
             } else {
                 reader.pop();
             }
         }
-        
     }
     
     //We should not come here
