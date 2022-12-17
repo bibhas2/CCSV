@@ -1,16 +1,23 @@
 #include <StringReader.h>
 #include <Parser.h>
 #include <assert.h>
+#include <iostream>
 
-void test_lambda() {
-    auto str = "aa,bb,cc,dd";
+void test_record() {
+    auto str = "aa,bb,cc,dd\r\nee,ff,gg,hh\r\n";
     ccsv::StringReader reader(str);
 
-    ccsv::parse<10>(reader, [](std::span<std::string_view> fields) {
+    ccsv::parse<10>(reader, [](size_t index, std::span<std::string_view> fields) {
+        assert(index < 2);
         
+        if (index == 0) {
+            assert(fields[0] == "aa");
+            assert(fields[3] == "dd");
+        } else {
+            assert(fields[0] == "ee");
+            assert(fields[3] == "hh");
+        }
     });
-    
-    //ccsv::parse<10>(reader, <#std::function<void (std::string_view *, size_t)> consumer#>)
 }
 
 void test_string_reader() {
@@ -36,7 +43,7 @@ void test_string_reader() {
 
 int main() {
     test_string_reader();
-    test_lambda();
+    test_record();
     
     return 0;
 }

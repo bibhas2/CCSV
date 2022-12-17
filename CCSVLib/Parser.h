@@ -21,10 +21,10 @@ namespace ccsv {
         virtual ~Reader() {};
     };
 
-    void _parse(Reader& reader, std::span<std::string_view> storage, std::function<void(std::span<std::string_view>)> consumer);
+    void _parse(Reader& reader, std::span<std::string_view> storage, std::function<void(size_t, std::span<std::string_view>)> consumer);
 
     template <size_t MaxFields>
-    void parse(Reader& reader, std::function<void(std::span<std::string_view>)> consumer) {
+    void parse(Reader& reader, std::function<void(size_t, std::span<std::string_view>)> consumer) {
         //Statically allocate memory for the fields of a record (line in CSV).
         std::string_view array[MaxFields];
         std::span<std::string_view> storage{array, MaxFields};
