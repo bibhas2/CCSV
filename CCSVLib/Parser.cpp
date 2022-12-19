@@ -21,7 +21,20 @@ void eat_space(Reader& reader) {
     reader.putback();
 }
 
+std::string_view extract_segment(Reader& reader, bool escaped_field) {
+    if (!escaped_field) {
+        return reader.segment();
+    }
+    
+    std::string_view field = reader.segment();
+    
+    return field.substr(1, field.length() - 2);
+}
+
 ParseStatus next_field(Reader& reader, std::string_view& field) {
+    bool inside_dquote = false;
+    bool escaped_field = false;
+    
     reader.mark_start();
     
     while (true) {
@@ -34,10 +47,31 @@ ParseStatus next_field(Reader& reader, std::string_view& field) {
             return END_DOCUMENT;
         }
         
+        if (ch == '"') {
+            if (!inside_dquote) {
+                inside_dquote = true;
+                escaped_field = true;
+            } else {
+                if (reader.peek() == '"') {
+                    //Still inside dquote
+                    reader.pop();
+                } else {
+                    //We are out of dquote
+                    inside_dquote = false;
+                }
+            }
+            
+            continue;
+        }
+        
+        if (inside_dquote) {
+            continue;
+        }
+        
         if (ch == ',') {
             reader.putback();
             reader.mark_end();
-            field = reader.segment();
+            field = extract_segment(reader, escaped_field);
             reader.pop();
             
             return HAS_MORE_FIELDS;
@@ -46,7 +80,7 @@ ParseStatus next_field(Reader& reader, std::string_view& field) {
         if (ch == '\r') {
             reader.putback();
             reader.mark_end();
-            field = reader.segment();
+            field = extract_segment(reader, escaped_field);
             reader.pop();
             reader.pop(); //Read \n
             
@@ -59,7 +93,7 @@ ParseStatus next_field(Reader& reader, std::string_view& field) {
         if (ch == '\n') {
             reader.putback();
             reader.mark_end();
-            field = reader.segment();
+            field = extract_segment(reader, escaped_field);
             reader.pop();
             
             return END_RECORD;

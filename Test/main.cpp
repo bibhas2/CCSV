@@ -20,6 +20,26 @@ void test_record() {
     });
 }
 
+void test_basic_escape() {
+    auto str = R"(aa,"b""b",cc,"d,d"
+"ee",ff,"g
+g",hh
+)";
+    ccsv::StringReader reader(str);
+
+    ccsv::parse<10>(reader, [](size_t index, std::span<std::string_view> fields) {
+        assert(index < 2);
+        
+        if (index == 0) {
+            assert(fields[1] == "b\"\"b");
+            assert(fields[3] == "d,d");
+        } else {
+            assert(fields[0] == "ee");
+            assert(fields[2] == "g\ng");
+        }
+    });
+}
+
 void test_newline() {
     //Non-standard CSV but common in Linux.macOS
     auto str = "aa,bb,cc,dd\nee,ff,gg,hh\n";
@@ -90,6 +110,7 @@ int main() {
     test_record();
     test_uneven();
     test_newline();
+    test_basic_escape();
     
     return 0;
 }
