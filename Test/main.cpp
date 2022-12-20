@@ -4,7 +4,10 @@
 #include <iostream>
 
 void test_record() {
-    auto str = "aa,bb,cc,dd\r\nee,ff,gg,hh\r\n";
+    auto str =
+        "aa,bb,cc,dd\r\n"
+        "ee,ff,gg,hh\r\n";
+    
     ccsv::StringReader reader(str);
 
     ccsv::parse<10>(reader, [](size_t index, std::span<std::string_view> fields) {
@@ -21,7 +24,11 @@ void test_record() {
 }
 
 void test_empty_line() {
-    auto str = "aa,bb,cc,dd\r\n\r\nee,ff,gg,hh\r\n";
+    auto str =
+        "aa,bb,cc,dd\r\n"
+        "\r\n"
+        "ee,ff,gg,hh\r\n";
+    
     ccsv::StringReader reader(str);
 
     ccsv::parse<10>(reader, [](size_t index, std::span<std::string_view> fields) {
@@ -63,8 +70,8 @@ g",hh
 
 /*
  * For unescaped fields, spaces are part of the field and can not be discarded.
- * Spaces before or after "" not allowed in theRFC.
- * But many may CSV files may have it.
+ * For escaped fields, spaces before or after "" not allowed in theRFC.
+ * But many CSV files may have it.
  */
 void test_space() {
     auto str = R"( aa, "bb",  cc ,
@@ -87,8 +94,10 @@ void test_space() {
 }
 
 void test_line_feed() {
-    //Non-standard CSV but common in Linux.macOS
-    auto str = "aa,bb,cc,dd\nee,ff,gg,hh\n";
+    //Non-standard CSV but common in Linux/macOS
+    auto str =
+        "aa,bb,cc,dd\n"
+        "ee,ff,gg,hh\n";
     ccsv::StringReader reader(str);
 
     ccsv::parse<10>(reader, [](size_t index, std::span<std::string_view> fields) {
@@ -105,7 +114,11 @@ void test_line_feed() {
 }
 
 void test_uneven() {
-    auto str = "aa,bb,cc,dd\r\nee,ff,gg\r\nhh,ii\r\n";
+    auto str =
+        "aa,bb,cc,dd\r\n" //More fields than storage
+        "ee,ff,gg\r\n"
+        "hh,ii\r\n"; //Less fields than storage
+    
     ccsv::StringReader reader(str);
 
     ccsv::parse<3>(reader, [](size_t index, std::span<std::string_view> fields) {
