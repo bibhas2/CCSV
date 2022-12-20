@@ -20,6 +20,27 @@ void test_record() {
     });
 }
 
+void test_empty_line() {
+    auto str = "aa,bb,cc,dd\r\n\r\nee,ff,gg,hh\r\n";
+    ccsv::StringReader reader(str);
+
+    ccsv::parse<10>(reader, [](size_t index, std::span<std::string_view> fields) {
+        assert(index < 3);
+        
+        if (index == 0) {
+            assert(fields[0] == "aa");
+            assert(fields[3] == "dd");
+        } else if (index == 1) {
+            //Empty line
+            assert(fields.size() == 1);
+            assert(fields[0] == "");
+        } else {
+            assert(fields[0] == "ee");
+            assert(fields[3] == "hh");
+        }
+    });
+}
+
 void test_basic_escape() {
     auto str = R"(aa,"b""b",cc,"d,d"
 "ee",ff,"g
@@ -111,6 +132,7 @@ int main() {
     test_uneven();
     test_newline();
     test_basic_escape();
+    test_empty_line();
     
     return 0;
 }
