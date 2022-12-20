@@ -2,6 +2,8 @@
 #include <Parser.h>
 #include <assert.h>
 #include <iostream>
+#include <MemoryMappedReader.h>
+#include <fstream>
 
 void test_record() {
     auto str =
@@ -165,6 +167,51 @@ void test_string_reader() {
     assert(reader.segment() == "bb");
 }
 
+void test_memory_map_reader() {
+    auto str =
+        "aa,bb,cc,dd\r\n"
+        "ee,ff,gg\r\n"
+        "hh,ii\r\n";
+
+    const char* file_name = "__test.csv";
+
+    {
+        std::ofstream test_file(file_name);
+
+        test_file << str;
+    } //Closes file
+
+    {
+        ccsv::MemoryMappedReader reader(file_name);
+
+        assert(reader.good());
+        assert(reader.data.size() > 0);
+
+        ccsv::parse<3>(reader, [](size_t index, std::span<std::string_view> fields) {
+            assert(index < 3);
+            
+            if (index == 0) {
+                assert(fields.size() == 3);
+                
+                assert(fields[0] == "aa");
+                assert(fields[2] == "cc");
+            } else if (index == 1) {
+                assert(fields.size() == 3);
+                
+                assert(fields[0] == "ee");
+                assert(fields[1] == "ff");
+            } else {
+                assert(fields.size() == 2);
+                
+                assert(fields[0] == "hh");
+                assert(fields[1] == "ii");
+            }
+        });
+    } //Closes file
+
+    std::remove(file_name);
+}
+
 int main() {
     test_string_reader();
     test_record();
@@ -173,6 +220,7 @@ int main() {
     test_basic_escape();
     test_empty_line();
     test_space();
+    test_memory_map_reader();
     
     return 0;
 }

@@ -11,6 +11,8 @@
 		A3F59050294D142A0077162C /* Parser.h in Headers */ = {isa = PBXBuildFile; fileRef = A3F5904E294D142A0077162C /* Parser.h */; };
 		A3F59053294D16DC0077162C /* StringReader.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A3F59051294D16DC0077162C /* StringReader.cpp */; };
 		A3F59054294D16DC0077162C /* StringReader.h in Headers */ = {isa = PBXBuildFile; fileRef = A3F59052294D16DC0077162C /* StringReader.h */; };
+		A3F5905C29521F040077162C /* MemoryMappedReader.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A3F5905A29521F040077162C /* MemoryMappedReader.cpp */; };
+		A3F5905D29521F040077162C /* MemoryMappedReader.h in Headers */ = {isa = PBXBuildFile; fileRef = A3F5905B29521F040077162C /* MemoryMappedReader.h */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -19,6 +21,8 @@
 		A3F5904E294D142A0077162C /* Parser.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Parser.h; sourceTree = "<group>"; };
 		A3F59051294D16DC0077162C /* StringReader.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = StringReader.cpp; sourceTree = "<group>"; };
 		A3F59052294D16DC0077162C /* StringReader.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = StringReader.h; sourceTree = "<group>"; };
+		A3F5905A29521F040077162C /* MemoryMappedReader.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = MemoryMappedReader.cpp; sourceTree = "<group>"; };
+		A3F5905B29521F040077162C /* MemoryMappedReader.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MemoryMappedReader.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -35,6 +39,8 @@
 		A3F59023294D13820077162C = {
 			isa = PBXGroup;
 			children = (
+				A3F5905A29521F040077162C /* MemoryMappedReader.cpp */,
+				A3F5905B29521F040077162C /* MemoryMappedReader.h */,
 				A3F59051294D16DC0077162C /* StringReader.cpp */,
 				A3F59052294D16DC0077162C /* StringReader.h */,
 				A3F5904D294D142A0077162C /* Parser.cpp */,
@@ -58,6 +64,7 @@
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A3F5905D29521F040077162C /* MemoryMappedReader.h in Headers */,
 				A3F59054294D16DC0077162C /* StringReader.h in Headers */,
 				A3F59050294D142A0077162C /* Parser.h in Headers */,
 			);
@@ -122,6 +129,7 @@
 			files = (
 				A3F5904F294D142A0077162C /* Parser.cpp in Sources */,
 				A3F59053294D16DC0077162C /* StringReader.cpp in Sources */,
+				A3F5905C29521F040077162C /* MemoryMappedReader.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
