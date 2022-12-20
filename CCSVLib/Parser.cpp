@@ -21,16 +21,6 @@ void eat_space(Reader& reader) {
     reader.putback();
 }
 
-std::string_view extract_segment(Reader& reader, bool escaped_field) {
-    if (!escaped_field) {
-        return reader.segment();
-    }
-    
-    std::string_view field = reader.segment();
-    
-    return field.substr(1, field.length() - 2);
-}
-
 ParseStatus next_field(Reader& reader, std::string_view& field) {
     bool inside_dquote = false;
     bool escaped_field = false;
@@ -51,6 +41,7 @@ ParseStatus next_field(Reader& reader, std::string_view& field) {
             if (!inside_dquote) {
                 inside_dquote = true;
                 escaped_field = true;
+                reader.mark_start();
             } else {
                 if (reader.peek() == '"') {
                     //Still inside dquote
@@ -58,6 +49,9 @@ ParseStatus next_field(Reader& reader, std::string_view& field) {
                 } else {
                     //We are out of dquote
                     inside_dquote = false;
+                    reader.putback();
+                    reader.mark_end();
+                    reader.pop();
                 }
             }
             
@@ -70,8 +64,12 @@ ParseStatus next_field(Reader& reader, std::string_view& field) {
         
         if (ch == ',') {
             reader.putback();
-            reader.mark_end();
-            field = extract_segment(reader, escaped_field);
+            
+            if (!escaped_field) {
+                reader.mark_end();
+            }
+            
+            field = reader.segment();
             reader.pop();
             
             return HAS_MORE_FIELDS;
@@ -79,8 +77,10 @@ ParseStatus next_field(Reader& reader, std::string_view& field) {
         
         if (ch == '\r') {
             reader.putback();
-            reader.mark_end();
-            field = extract_segment(reader, escaped_field);
+            if (!escaped_field) {
+                reader.mark_end();
+            }
+            field = reader.segment();
             reader.pop();
             reader.pop(); //Read \n
             
@@ -92,8 +92,12 @@ ParseStatus next_field(Reader& reader, std::string_view& field) {
          */
         if (ch == '\n') {
             reader.putback();
-            reader.mark_end();
-            field = extract_segment(reader, escaped_field);
+
+            if (!escaped_field) {
+                reader.mark_end();
+            }
+
+            field = reader.segment();
             reader.pop();
             
             return END_RECORD;

@@ -61,6 +61,31 @@ g",hh
     });
 }
 
+/*
+ * For unescaped fields, spaces are part of the field and can not be discarded.
+ * Spaces before or after "" not allowed in theRFC.
+ * But many may CSV files may have it.
+ */
+void test_space() {
+    auto str = R"( aa, "bb",  cc ,
+  " cc ", " dd "
+)";
+    ccsv::StringReader reader(str);
+
+    ccsv::parse<10>(reader, [](size_t index, std::span<std::string_view> fields) {
+        assert(index < 2);
+        
+        if (index == 0) {
+            assert(fields[0] == " aa");
+            assert(fields[1] == "bb");
+            assert(fields[2] == "  cc ");
+        } else {
+            assert(fields[0] == " cc ");
+            assert(fields[1] == " dd ");
+        }
+    });
+}
+
 void test_newline() {
     //Non-standard CSV but common in Linux.macOS
     auto str = "aa,bb,cc,dd\nee,ff,gg,hh\n";
@@ -133,6 +158,7 @@ int main() {
     test_newline();
     test_basic_escape();
     test_empty_line();
+    test_space();
     
     return 0;
 }
