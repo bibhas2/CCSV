@@ -15,7 +15,7 @@ namespace ccsv {
         void putback();
         bool good();
         void mark_start();
-        void mark_end();
+        void mark_stop();
         std::string_view segment();
 
         virtual ~StringReader();

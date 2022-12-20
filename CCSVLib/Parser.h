@@ -11,15 +11,26 @@ namespace ccsv {
 struct Reader
 {
     size_t start = 0;
-    size_t end = 0;
+    size_t stop = 0;
     size_t position = 0;
     
     virtual char peek() = 0;
     virtual char pop() = 0;
     virtual void putback() = 0;
     virtual bool good() = 0;
+    /*
+     * The next read character will mark the beginning of a field.
+     */
     virtual void mark_start() = 0;
-    virtual void mark_end() = 0;
+    /*
+     * The last read character stops a field, such as a comma or CR.
+     * Hence, this character is excluded from the field.
+     */
+    virtual void mark_stop() = 0;
+    /*
+     * Return the characters between the
+     * start (inclusive) and stop (exclusive).
+     */
     virtual std::string_view segment() = 0;
     virtual ~Reader() {};
 };

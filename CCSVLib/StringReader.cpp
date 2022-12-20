@@ -44,12 +44,12 @@ namespace ccsv {
         start = position;
     }
 
-    void StringReader::mark_end() {
-        end = position;
+    void StringReader::mark_stop() {
+        stop = position > 0 ? (position - 1) : 0;
     }
 
     std::string_view StringReader::segment() {
-        return data.substr(start, end - start);
+        return data.substr(start, stop - start);
     }
 
     bool StringReader::good() {

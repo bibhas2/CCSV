@@ -86,7 +86,7 @@ void test_space() {
     });
 }
 
-void test_newline() {
+void test_line_feed() {
     //Non-standard CSV but common in Linux.macOS
     auto str = "aa,bb,cc,dd\nee,ff,gg,hh\n";
     ccsv::StringReader reader(str);
@@ -145,8 +145,9 @@ void test_string_reader() {
     
     assert(reader.pop() == 'b');
     assert(reader.pop() == 'b');
+    assert(reader.pop() == ',');
     
-    reader.mark_end();
+    reader.mark_stop();
     
     assert(reader.segment() == "bb");
 }
@@ -155,7 +156,7 @@ int main() {
     test_string_reader();
     test_record();
     test_uneven();
-    test_newline();
+    test_line_feed();
     test_basic_escape();
     test_empty_line();
     test_space();

@@ -31,9 +31,6 @@ ParseStatus next_field(Reader& reader, std::string_view& field) {
         char ch = reader.pop();
         
         if (ch == '\0') {
-            reader.mark_end();
-            field = reader.segment();
-            
             return END_DOCUMENT;
         }
         
@@ -41,6 +38,7 @@ ParseStatus next_field(Reader& reader, std::string_view& field) {
             if (!inside_dquote) {
                 inside_dquote = true;
                 escaped_field = true;
+                
                 reader.mark_start();
             } else {
                 if (reader.peek() == '"') {
@@ -49,9 +47,8 @@ ParseStatus next_field(Reader& reader, std::string_view& field) {
                 } else {
                     //We are out of dquote
                     inside_dquote = false;
-                    reader.putback();
-                    reader.mark_end();
-                    reader.pop();
+                    
+                    reader.mark_stop();
                 }
             }
             
@@ -63,42 +60,36 @@ ParseStatus next_field(Reader& reader, std::string_view& field) {
         }
         
         if (ch == ',') {
-            reader.putback();
-            
             if (!escaped_field) {
-                reader.mark_end();
+                reader.mark_stop();
             }
             
             field = reader.segment();
-            reader.pop();
             
             return HAS_MORE_FIELDS;
         }
         
         if (ch == '\r') {
-            reader.putback();
             if (!escaped_field) {
-                reader.mark_end();
+                reader.mark_stop();
             }
+            
             field = reader.segment();
-            reader.pop();
-            reader.pop(); //Read \n
+            
+            reader.pop(); //Read the LF \n
             
             return END_RECORD;
         }
         
         /*
-         * Non-standard end of line with just a \n
+         * Non-standard end of line with just a LF \n
          */
         if (ch == '\n') {
-            reader.putback();
-
             if (!escaped_field) {
-                reader.mark_end();
+                reader.mark_stop();
             }
 
             field = reader.segment();
-            reader.pop();
             
             return END_RECORD;
         }
