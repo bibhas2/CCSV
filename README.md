@@ -36,7 +36,7 @@ The ``ccsv::parse<10>()`` call statically allocates enough space for 10 fields p
 
 # Building
 
-# Using Makefile
+## Using Makefile
 From the root of the project run.
 
 ```
@@ -50,17 +50,17 @@ Running tests...
 All tests passed.
 ```
 
-# Using Xcode
+## Using Xcode
 Open the ``CCSV`` workspace. Then run the unit tests (Command+R). This will build the library, the unit tests and run the tests.
 
-# Using Visual Studio
+## Using Visual Studio
 
 TBD.
 
 # User Guide
-# Parsing a String
+## Parsing a String
 
-Use the ``StringReader`` class to read from a string. You need to have an estimate for how many fields are expected per line. This is needed to statically allocate space at compile time. You can always error on the side of caution. For example, if you expecte 4 fields per line, you can configure the parser with 64 fields.
+Use the ``StringReader`` class to read from a string. You need to have an estimate for how many fields are expected per line. This is needed to statically allocate space at compile time. You can always err on the side of caution. For example, if you expect 4 fields per line, you can configure the parser with 64 fields.
 
 ```c
 void test_record() {
