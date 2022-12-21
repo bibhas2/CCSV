@@ -213,6 +213,8 @@ void test_memory_map_reader() {
 }
 
 int main() {
+    std::cout << "Running tests..." << std::endl;
+
     test_string_reader();
     test_record();
     test_uneven();
@@ -222,5 +224,7 @@ int main() {
     test_space();
     test_memory_map_reader();
     
+    std::cout << "All tests passed." << std::endl;
+
     return 0;
 }
