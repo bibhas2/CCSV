@@ -1,4 +1,6 @@
 #include "Parser.h"
+#include <ctype.h>
+#include <assert.h>
 
 namespace ccsv {
 enum ParseStatus {
