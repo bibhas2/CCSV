@@ -1,3 +1,3 @@
 all:
-	make -C CCSVLib
-	make -C Test
+	@make -C CCSVLib
+	@make -C Test
