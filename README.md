@@ -4,6 +4,7 @@ Key features of this library.
 - Follows [RFC 4180](https://www.rfc-editor.org/rfc/rfc4180).
 - Does not allocate any memory on the heap.
 - Uses the latest non-allocating and non-owned STL data structures like ``std::string_view`` and ``std::span`` to simplify code.
+- Doesn't throw.
 
 ## Quick Example
 ```c
@@ -213,4 +214,19 @@ g",hh
     });
 }
 ```
+
+# Memory Safety
+The ``std::string_view`` and ``std::span`` classes are small, fast and convenient. But they have memory safety concerns.
+
+## std::string_view
+The indexing operator doesn't do any bounds checking. But the ``at()`` method does. We use the ``at()`` method in this library to be safe.
+
+The ``substr(pos, count)`` method does a range check and throws if ``pos`` is larger than the length. However, if ``count`` is too large then no exception is thrown. Instead, ``count`` is quietly adjusted such that the substring doesn't go beyond the length of the original string. 
+
+## std::span
+The indexing operator doesn't do any bounds checking. No ``at()`` method is provided. The library itself doesn't use the indexing operator. A user of the library needs to be mindful of this issue when writing the lambda code.
+
+The ``subspan()`` method provides no bounds check. 
+
+Overall ``std::span`` has serious memory safety concerns.
 
