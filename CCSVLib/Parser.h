@@ -41,7 +41,7 @@ template <size_t MaxFields>
 void parse(Reader& reader, std::function<void(size_t, std::span<std::string_view>)> consumer) {
     //Statically allocate memory for the fields of a record (line in CSV).
     std::string_view array[MaxFields];
-    std::span<std::string_view> storage{array, MaxFields};
+    std::span<std::string_view> storage{array};
     
     _parse(reader, storage, consumer);
 }
