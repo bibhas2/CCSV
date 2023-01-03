@@ -10,9 +10,9 @@ void test_record() {
         "aa,bb,cc,dd\r\n"
         "ee,ff,gg,hh\r\n";
     
-    ccsv::StringReader reader(str);
+    ccsv::Parser parser;
 
-    ccsv::parse<10>(reader, [](size_t index, std::span<std::string_view> fields) {
+    parser.parse<10>(str, [](size_t index, std::span<std::string_view> fields) {
         assert(index < 2);
         
         if (index == 0) {
@@ -31,9 +31,9 @@ void test_empty_line() {
         "\r\n"
         "ee,ff,gg,hh\r\n";
     
-    ccsv::StringReader reader(str);
+    ccsv::Parser parser;
 
-    ccsv::parse<10>(reader, [](size_t index, std::span<std::string_view> fields) {
+    parser.parse<10>(str, [](size_t index, std::span<std::string_view> fields) {
         assert(index < 3);
         
         if (index == 0) {
@@ -55,9 +55,9 @@ void test_basic_escape() {
 "ee",ff,"g
 g",hh
 )";
-    ccsv::StringReader reader(str);
+    ccsv::Parser parser;
 
-    ccsv::parse<10>(reader, [](size_t index, std::span<std::string_view> fields) {
+    parser.parse<10>(str, [](size_t index, std::span<std::string_view> fields) {
         assert(index < 2);
         
         if (index == 0) {
@@ -79,9 +79,9 @@ void test_space() {
     auto str = R"( aa, "bb",  cc ,
   " cc ", " dd "
 )";
-    ccsv::StringReader reader(str);
+    ccsv::Parser parser;
 
-    ccsv::parse<10>(reader, [](size_t index, std::span<std::string_view> fields) {
+    parser.parse<10>(str, [](size_t index, std::span<std::string_view> fields) {
         assert(index < 2);
         
         if (index == 0) {
@@ -100,9 +100,9 @@ void test_line_feed() {
     auto str =
         "aa,bb,cc,dd\n"
         "ee,ff,gg,hh\n";
-    ccsv::StringReader reader(str);
+    ccsv::Parser parser;
 
-    ccsv::parse<10>(reader, [](size_t index, std::span<std::string_view> fields) {
+    parser.parse<10>(str, [](size_t index, std::span<std::string_view> fields) {
         assert(index < 2);
         
         if (index == 0) {
@@ -121,9 +121,9 @@ void test_uneven() {
         "ee,ff,gg\r\n"
         "hh,ii\r\n"; //Less fields than storage
     
-    ccsv::StringReader reader(str);
+    ccsv::Parser parser;
 
-    ccsv::parse<3>(reader, [](size_t index, std::span<std::string_view> fields) {
+    parser.parse<3>(str, [](size_t index, std::span<std::string_view> fields) {
         assert(index < 3);
         
         if (index == 0) {
@@ -147,24 +147,23 @@ void test_uneven() {
 
 void test_string_reader() {
     auto str = "aa,bb,cc,dd";
-    ccsv::StringReader reader(str);
+    ccsv::Parser parser;
+    std::string_view data{str};
     
-    assert(reader.good());
+    assert(parser.pop(data) == 'a');
+    assert(parser.pop(data) == 'a');
+    assert(parser.peek(data) == ',');
+    assert(parser.pop(data) == ',');
     
-    assert(reader.pop() == 'a');
-    assert(reader.pop() == 'a');
-    assert(reader.peek() == ',');
-    assert(reader.pop() == ',');
+    parser.mark_start();
     
-    reader.mark_start();
+    assert(parser.pop(data) == 'b');
+    assert(parser.pop(data) == 'b');
+    assert(parser.pop(data) == ',');
     
-    assert(reader.pop() == 'b');
-    assert(reader.pop() == 'b');
-    assert(reader.pop() == ',');
+    parser.mark_stop();
     
-    reader.mark_stop();
-    
-    assert(reader.segment() == "bb");
+    assert(parser.segment(data) == "bb");
 }
 
 void test_memory_map_reader() {
@@ -182,12 +181,14 @@ void test_memory_map_reader() {
     } //Closes file
 
     {
-        ccsv::MemoryMappedReader reader(file_name);
+        ccsv::FileMapper mapper(file_name);
 
-        assert(reader.good());
-        assert(reader.data.size() > 0);
+        assert(mapper.good());
+        assert(mapper.get_bytes().size() > 0);
 
-        ccsv::parse<3>(reader, [](size_t index, std::span<std::string_view> fields) {
+        ccsv::Parser parser;
+        
+        parser.parse<3>(mapper.get_bytes(), [](size_t index, std::span<std::string_view> fields) {
             assert(index < 3);
             
             if (index == 0) {
