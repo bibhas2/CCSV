@@ -4,7 +4,7 @@
 
 namespace ccsv {
 
-char Parser::peek(std::string_view data) {
+char Parser::peek(const std::string_view& data) {
     if (position < data.size()) {
         return data.at(position);
     }
@@ -13,7 +13,7 @@ char Parser::peek(std::string_view data) {
     }
 }
 
-char Parser::pop(std::string_view data) {
+char Parser::pop(const std::string_view& data) {
     if (position < data.size()) {
         char result = data.at(position);
 
@@ -40,11 +40,11 @@ void Parser::mark_stop() {
     stop = position > 0 ? (position - 1) : 0;
 }
 
-std::string_view Parser::segment(std::string_view data) {
+std::string_view Parser::segment(const std::string_view& data) {
     return data.substr(start, stop - start);
 }
 
-ParseStatus Parser::next_field(std::string_view data, std::string_view& field) {
+ParseStatus Parser::next_field(const std::string_view& data, std::string_view& field) {
     bool inside_dquote = false;
     bool escaped_field = false;
     
@@ -119,7 +119,7 @@ ParseStatus Parser::next_field(std::string_view data, std::string_view& field) {
     }
 }
 
-ParseStatus Parser::parse_record(std::string_view data, std::span<std::string_view> storage, std::span<std::string_view>& record) {
+ParseStatus Parser::parse_record(const std::string_view& data, std::span<std::string_view> storage, std::span<std::string_view>& record) {
     size_t field_index = 0;
     std::string_view field;
     

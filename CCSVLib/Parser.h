@@ -20,8 +20,8 @@ struct Parser
     size_t stop = 0;
     size_t position = 0;
     
-    char peek(std::string_view data);
-    char pop(std::string_view data);
+    char peek(const std::string_view& data);
+    char pop(const std::string_view& data);
     void putback();
     
     /*
@@ -37,10 +37,10 @@ struct Parser
      * Return the characters between the
      * start (inclusive) and stop (exclusive).
      */
-    std::string_view segment(std::string_view data);
+    std::string_view segment(const std::string_view& data);
     ~Parser() {};
-    ParseStatus next_field(std::string_view data, std::string_view& field);
-    ParseStatus parse_record(std::string_view data, std::span<std::string_view> storage, std::span<std::string_view>& record);
+    ParseStatus next_field(const std::string_view& data, std::string_view& field);
+    ParseStatus parse_record(const std::string_view& data, std::span<std::string_view> storage, std::span<std::string_view>& record);
     
     template <size_t MaxFields>
     void parse(std::string_view data, std::function<void(size_t, std::span<std::string_view>)> consumer) {
