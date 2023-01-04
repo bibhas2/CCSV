@@ -76,7 +76,7 @@ g",hh
  */
 void test_space() {
     auto str = R"( aa, "bb",  cc ,
-  " cc ", " dd "
+  " dd ", " ee "
 )";
     ccsv::Parser parser;
 
@@ -88,8 +88,8 @@ void test_space() {
             assert(fields[1] == "bb");
             assert(fields[2] == "  cc ");
         } else {
-            assert(fields[0] == " cc ");
-            assert(fields[1] == " dd ");
+            assert(fields[0] == " dd ");
+            assert(fields[1] == " ee ");
         }
     });
 }
