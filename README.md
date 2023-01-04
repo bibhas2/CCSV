@@ -137,7 +137,7 @@ We can read the file like this.
 ```c
 #include <Parser.h>
 #include <assert.h>
-#include <MemoryMappedReader.h>
+#include <FileMapper.h>
 
 void test_memory_map_reader() {
     ccsv::FileMapper mapper("test.csv");
