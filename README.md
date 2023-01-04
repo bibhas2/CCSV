@@ -213,7 +213,7 @@ void test_basic_escape() {
 Escaped double quotes are not unescaped by the parser. I found no simple way of doing that without allocating. In the example below the field ``"b""b"`` is reported to the lambda without unescaping the double quote.
 
 ```
-aa,b""b,cc,"d,d"
+aa,"b""b",cc,"d,d"
 ee,ff,"g
 g",hh
 ```
