@@ -8,18 +8,17 @@ Key features of this library.
 
 ## Quick Example
 ```c
-#include <StringReader.h>
 #include <Parser.h>
 #include <assert.h>
 
 void test_record() {
-    auto str =
+    std::string_view str =
         "aa,bb,cc,dd\r\n"
         "ee,ff,gg,hh\r\n";
     
-    ccsv::StringReader reader(str);
+    ccsv::Parser parser;
 
-    ccsv::parse<10>(reader, [](size_t index, std::span<std::string_view> fields) {
+    parser.parse<10>(str, [](size_t index, std::span<std::string_view> fields) {
         assert(index < 2);
         
         if (index == 0) {
@@ -33,7 +32,7 @@ void test_record() {
 }
 ```
 
-The ``ccsv::parse<10>()`` call statically allocates enough space for 10 fields per line. Any excess fileds are discarded and does not cause any errors.
+The ``ccsv::Parser::parse<10>()`` call statically allocates enough space for 10 fields per line. Any excess fileds are discarded and does not cause any errors.
 
 # Building
 
@@ -52,36 +51,47 @@ All tests passed.
 ```
 
 ## Using Xcode
-Open the ``CCSV`` workspace. Then run the unit tests (Command+R). This will build the library, the unit tests and run the tests.
+Open the ``CCSV`` workspace. Then run the Test project (Command+R). This will build the library, the unit tests and run the tests.
 
 ## Using Visual Studio
 
-TBD.
+Open the ``CCSV.sln`` solution file in Visual Studio. Run the solution. This will build the ``CCSVLib`` static libtrary, the ``Test`` console application and run the tests.
 
 # User Guide
 ## Parsing a String
 
-Use the ``StringReader`` class to read from a string. You need to have an estimate for how many fields are expected per line. This is needed to statically allocate space at compile time. You can always err on the side of caution. For example, if you expect 4 fields per line, you can configure the parser with 64 fields.
+The ``Parser::parse()`` method parses a ``std::string_view``. It doesn't matter where the internal data of the ``string_view`` comes from. 
+
+You need to have an estimate for how many fields are expected per line. This is needed to statically allocate space at compile time. You can always err on the side of caution. For example, if you expect 4 fields per line, you can configure the parser with 64 fields.
 
 ```c
 void test_record() {
-    auto str =
+    std::string_view str =
         "aa,bb,cc,dd\r\n"
         "ee,ff,gg,hh\r\n";
-    
-    ccsv::StringReader reader(str);
 
-    ccsv::parse<64>(reader, [](size_t index, std::span<std::string_view> fields) {
-        std::cout << "Record no:" << index << std::endl;
-        std::cout << "Field count:" << fields.size() << std::endl;
+    ccsv::Parser parser;
+
+    parser.parse<64>(str, [](size_t index, std::span<std::string_view> fields) {
+        std::cout << "Record no: " << index << std::endl;
+        std::cout << "Field count: " << fields.size() << std::endl;
     });
 }
 ```
 
-The ``ccsv::parse()`` function receives two parameters.
+Should print:
 
-1. The reader.
-2. A lambda that is called for each record.
+```
+Record no: 0
+Field count: 4
+Record no: 1
+Field count: 4
+```
+
+The ``parse()`` method receives two parameters.
+
+1. The ``std::string_view`` to parse.
+2. A lambda that is called for each record (line in CSV).
 
 The lambda receives two parameters:
 
@@ -96,10 +106,10 @@ void test_uneven() {
         "aa,bb,cc,dd\r\n" //More fields than storage
         "ee,ff,gg\r\n"
         "hh,ii\r\n"; //Less fields than storage
-    
-    ccsv::StringReader reader(str);
+   
+    ccsv::Parser parser;
 
-    ccsv::parse<3>(reader, [](auto index, auto fields) {      
+    parser.parse<3>(str, [](size_t index, std::span<std::string_view> fields) {
         if (index == 0) {
             assert(fields.size() == 3);
         } else if (index == 1) {
@@ -130,16 +140,18 @@ We can read the file like this.
 #include <MemoryMappedReader.h>
 
 void test_memory_map_reader() {
-    ccsv::MemoryMappedReader reader("test.csv");
+    ccsv::FileMapper mapper("test.csv");
 
-    //Check if file could be mapped
-    assert(reader.good());
+    assert(mapper.good());
+    assert(mapper.get_bytes().size() > 0);
 
-    ccsv::parse<10>(reader, [](auto index, auto fields) {
+    ccsv::Parser parser;
+    
+    parser.parse<3>(mapper.get_bytes(), [](size_t index, std::span<std::string_view> fields) {
         assert(index < 3);
         
         if (index == 0) {
-            assert(fields.size() == 4);
+            assert(fields.size() == 3);
             
             assert(fields[0] == "aa");
             assert(fields[2] == "cc");
@@ -159,25 +171,29 @@ void test_memory_map_reader() {
 ```
 
 # Standard Conformance
-The library conforms to RFC 4180. It relaxes the standard a bit to be more flexible.
+The library conforms to RFC 4180. It relaxes the standard a bit to be more flexible. These departures are discussed below.
 
 ## UNIX Newline
 RFC 4180 requires each line to be ended by CRLF (``\r\n``). It is common in Linux and macOS for files to end with just a LF. The library tolerates such files.
 
 ## Spaces Around Escaped Fields
-The RFC makes clear that spaces are a part of the fields. They should not be ignored. However, it's not clear what happens to the spaces before or after the double quotes of an escaped field. The ABNF grammer appears to indicate that there should be no spaces. The parser discards spaces before and after the double quotes around an escaped field.
+The RFC makes it clear that spaces are a part of the fields. They should not be ignored. However, it's not clear what happens to the spaces before or after the double quotes of an escaped field. The ABNF grammer appears to indicate that there should be no spaces. The parser discards spaces before and after the double quotes around an escaped field.
 
-In the example below the field ``" dd "`` has spaces around it. Those spaces are ignored.
+In the example below the unescaped fields ``aa`` and ``cc`` have spaces around them. These spaces are preserved. However, for the escaped fields such as ``"bb"`` the spaces outside the double quotes are ignored.
+
+```
+ aa, "bb",  cc ,
+   " dd "  , " ee "
+```
 
 ```c
-void test_space() {
-    auto str =
-R"( aa, "bb",  cc ,
-  " dd "  , " ee "
+void test_basic_escape() {
+    auto str = R"( aa, "bb",  cc ,
+  " dd ", " ee "
 )";
-    ccsv::StringReader reader(str);
+    ccsv::Parser parser;
 
-    ccsv::parse<10>(reader, [](auto index, auto fields) {
+    parser.parse<10>(str, [](auto index, auto fields) {
         assert(index < 2);
         
         if (index == 0) {
@@ -196,20 +212,29 @@ R"( aa, "bb",  cc ,
 
 Escaped double quotes are not unescaped by the parser. I found no simple way of doing that without allocating. In the example below the field ``"b""b"`` is reported to the lambda without unescaping the double quote.
 
+```
+aa,"b""b",cc,"d,d"
+ee,ff,"g
+g",hh
+```
+
 ```c
 void test_basic_escape() {
     auto str = R"(aa,"b""b",cc,"d,d"
 "ee",ff,"g
 g",hh
 )";
-    ccsv::StringReader reader(str);
+    ccsv::Parser parser;
 
-    ccsv::parse<10>(reader, [](auto index, auto fields) {
+    parser.parse<10>(str, [](auto index, auto fields) {
         assert(index < 2);
         
         if (index == 0) {
-            //Double quote is not unescaped!
             assert(fields[1] == "b\"\"b");
+            assert(fields[3] == "d,d");
+        } else {
+            assert(fields[0] == "ee");
+            assert(fields[2] == "g\ng");
         }
     });
 }
@@ -224,7 +249,7 @@ The indexing operator doesn't do any bounds checking. But the ``at()`` method do
 The ``substr(pos, count)`` method does a range check and throws if ``pos`` is larger than the length. However, if ``count`` is too large then no exception is thrown. Instead, ``count`` is quietly adjusted such that the substring doesn't go beyond the length of the original string. 
 
 ## std::span
-The indexing operator doesn't do any bounds checking. No ``at()`` method is provided. The library itself doesn't use the indexing operator. A user of the library needs to be mindful of this issue when writing the lambda code.
+The indexing operator doesn't do any bounds checking. No ``at()`` method is provided.
 
 The ``subspan()`` method provides no bounds check. 
 

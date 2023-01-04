@@ -1,8 +1,7 @@
-#include <StringReader.h>
 #include <Parser.h>
 #include <assert.h>
 #include <iostream>
-#include <MemoryMappedReader.h>
+#include <FileMapper.h>
 #include <fstream>
 
 void test_record() {
@@ -10,9 +9,9 @@ void test_record() {
         "aa,bb,cc,dd\r\n"
         "ee,ff,gg,hh\r\n";
     
-    ccsv::StringReader reader(str);
+    ccsv::Parser parser;
 
-    ccsv::parse<10>(reader, [](size_t index, std::span<std::string_view> fields) {
+    parser.parse<10>(str, [](size_t index, std::span<std::string_view> fields) {
         assert(index < 2);
         
         if (index == 0) {
@@ -31,9 +30,9 @@ void test_empty_line() {
         "\r\n"
         "ee,ff,gg,hh\r\n";
     
-    ccsv::StringReader reader(str);
+    ccsv::Parser parser;
 
-    ccsv::parse<10>(reader, [](size_t index, std::span<std::string_view> fields) {
+    parser.parse<10>(str, [](size_t index, std::span<std::string_view> fields) {
         assert(index < 3);
         
         if (index == 0) {
@@ -55,9 +54,9 @@ void test_basic_escape() {
 "ee",ff,"g
 g",hh
 )";
-    ccsv::StringReader reader(str);
+    ccsv::Parser parser;
 
-    ccsv::parse<10>(reader, [](size_t index, std::span<std::string_view> fields) {
+    parser.parse<10>(str, [](size_t index, std::span<std::string_view> fields) {
         assert(index < 2);
         
         if (index == 0) {
@@ -77,11 +76,11 @@ g",hh
  */
 void test_space() {
     auto str = R"( aa, "bb",  cc ,
-  " cc ", " dd "
+  " dd ", " ee "
 )";
-    ccsv::StringReader reader(str);
+    ccsv::Parser parser;
 
-    ccsv::parse<10>(reader, [](size_t index, std::span<std::string_view> fields) {
+    parser.parse<10>(str, [](size_t index, std::span<std::string_view> fields) {
         assert(index < 2);
         
         if (index == 0) {
@@ -89,8 +88,8 @@ void test_space() {
             assert(fields[1] == "bb");
             assert(fields[2] == "  cc ");
         } else {
-            assert(fields[0] == " cc ");
-            assert(fields[1] == " dd ");
+            assert(fields[0] == " dd ");
+            assert(fields[1] == " ee ");
         }
     });
 }
@@ -100,9 +99,9 @@ void test_line_feed() {
     auto str =
         "aa,bb,cc,dd\n"
         "ee,ff,gg,hh\n";
-    ccsv::StringReader reader(str);
+    ccsv::Parser parser;
 
-    ccsv::parse<10>(reader, [](size_t index, std::span<std::string_view> fields) {
+    parser.parse<10>(str, [](size_t index, std::span<std::string_view> fields) {
         assert(index < 2);
         
         if (index == 0) {
@@ -121,9 +120,9 @@ void test_uneven() {
         "ee,ff,gg\r\n"
         "hh,ii\r\n"; //Less fields than storage
     
-    ccsv::StringReader reader(str);
+    ccsv::Parser parser;
 
-    ccsv::parse<3>(reader, [](size_t index, std::span<std::string_view> fields) {
+    parser.parse<3>(str, [](size_t index, std::span<std::string_view> fields) {
         assert(index < 3);
         
         if (index == 0) {
@@ -147,24 +146,23 @@ void test_uneven() {
 
 void test_string_reader() {
     auto str = "aa,bb,cc,dd";
-    ccsv::StringReader reader(str);
+    ccsv::Parser parser;
+    std::string_view data{str};
     
-    assert(reader.good());
+    assert(parser.pop(data) == 'a');
+    assert(parser.pop(data) == 'a');
+    assert(parser.peek(data) == ',');
+    assert(parser.pop(data) == ',');
     
-    assert(reader.pop() == 'a');
-    assert(reader.pop() == 'a');
-    assert(reader.peek() == ',');
-    assert(reader.pop() == ',');
+    parser.mark_start();
     
-    reader.mark_start();
+    assert(parser.pop(data) == 'b');
+    assert(parser.pop(data) == 'b');
+    assert(parser.pop(data) == ',');
     
-    assert(reader.pop() == 'b');
-    assert(reader.pop() == 'b');
-    assert(reader.pop() == ',');
+    parser.mark_stop();
     
-    reader.mark_stop();
-    
-    assert(reader.segment() == "bb");
+    assert(parser.segment(data) == "bb");
 }
 
 void test_memory_map_reader() {
@@ -176,18 +174,24 @@ void test_memory_map_reader() {
     const char* file_name = "__test.csv";
 
     {
-        std::ofstream test_file(file_name);
+        /*
+        Use binary mode. Else in Windows the \n will be replaced by \r\n causing
+        the lines to end with \r\r\n.
+        */
+        std::ofstream test_file(file_name, std::ios::binary);
 
         test_file << str;
     } //Closes file
 
     {
-        ccsv::MemoryMappedReader reader(file_name);
+        ccsv::FileMapper mapper(file_name);
 
-        assert(reader.good());
-        assert(reader.data.size() > 0);
+        assert(mapper.good());
+        assert(mapper.get_bytes().size() > 0);
 
-        ccsv::parse<3>(reader, [](size_t index, std::span<std::string_view> fields) {
+        ccsv::Parser parser;
+        
+        parser.parse<3>(mapper.get_bytes(), [](size_t index, std::span<std::string_view> fields) {
             assert(index < 3);
             
             if (index == 0) {

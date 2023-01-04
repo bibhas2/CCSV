@@ -1,7 +1,7 @@
 CC=g++
 CFLAGS=-std=gnu++20
-OBJS=Parser.o StringReader.o MemoryMappedReader.o
-HEADERS=Parser.h StringReader.h MemoryMappedReader.h
+OBJS=Parser.o FileMapper.o
+HEADERS=Parser.h FileMapper.h
 
 all: libCCSVLib.a
 

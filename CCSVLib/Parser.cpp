@@ -3,34 +3,55 @@
 #include <assert.h>
 
 namespace ccsv {
-enum ParseStatus {
-    HAS_MORE_FIELDS,
-    END_RECORD,
-    END_DOCUMENT
-};
 
-void eat_space(Reader& reader) {
-    char ch = reader.pop();
-
-    if (ch == 0) return;
-
-    while (isspace(ch)) {
-        ch = reader.pop();
-
-        if (ch == 0) return;
+char Parser::peek(const std::string_view& data) {
+    if (position < data.size()) {
+        return data.at(position);
     }
-
-    reader.putback();
+    else {
+        return '\0';
+    }
 }
 
-ParseStatus next_field(Reader& reader, std::string_view& field) {
+char Parser::pop(const std::string_view& data) {
+    if (position < data.size()) {
+        char result = data.at(position);
+
+        ++position;
+
+        return result;
+    }
+    else {
+        return '\0';
+    }
+}
+
+void Parser::putback() {
+    if (position > 0) {
+        --position;
+    }
+}
+
+void Parser::mark_start() {
+    start = position;
+}
+
+void Parser::mark_stop() {
+    stop = position > 0 ? (position - 1) : 0;
+}
+
+std::string_view Parser::segment(const std::string_view& data) {
+    return data.substr(start, stop - start);
+}
+
+ParseStatus Parser::next_field(const std::string_view& data, std::string_view& field) {
     bool inside_dquote = false;
     bool escaped_field = false;
     
-    reader.mark_start();
+    mark_start();
     
     while (true) {
-        char ch = reader.pop();
+        char ch = pop(data);
         
         if (ch == '\0') {
             return END_DOCUMENT;
@@ -41,16 +62,16 @@ ParseStatus next_field(Reader& reader, std::string_view& field) {
                 inside_dquote = true;
                 escaped_field = true;
                 
-                reader.mark_start();
+                mark_start();
             } else {
-                if (reader.peek() == '"') {
+                if (peek(data) == '"') {
                     //Still inside dquote
-                    reader.pop();
+                    pop(data);
                 } else {
                     //We are out of dquote
                     inside_dquote = false;
                     
-                    reader.mark_stop();
+                    mark_stop();
                 }
             }
             
@@ -63,22 +84,22 @@ ParseStatus next_field(Reader& reader, std::string_view& field) {
         
         if (ch == ',') {
             if (!escaped_field) {
-                reader.mark_stop();
+                mark_stop();
             }
             
-            field = reader.segment();
+            field = segment(data);
             
             return HAS_MORE_FIELDS;
         }
         
         if (ch == '\r') {
             if (!escaped_field) {
-                reader.mark_stop();
+                mark_stop();
             }
             
-            field = reader.segment();
+            field = segment(data);
             
-            reader.pop(); //Read the LF \n
+            pop(data); //Read the LF \n
             
             return END_RECORD;
         }
@@ -88,22 +109,22 @@ ParseStatus next_field(Reader& reader, std::string_view& field) {
          */
         if (ch == '\n') {
             if (!escaped_field) {
-                reader.mark_stop();
+                mark_stop();
             }
 
-            field = reader.segment();
+            field = segment(data);
             
             return END_RECORD;
         }
     }
 }
 
-ParseStatus parse_record(Reader& reader, std::span<std::string_view> storage, std::span<std::string_view>& record) {
+ParseStatus Parser::parse_record(const std::string_view& data, std::span<std::string_view> storage, std::span<std::string_view>& record) {
     size_t field_index = 0;
     std::string_view field;
     
     while (true) {
-        auto status = next_field(reader, field);
+        auto status = next_field(data, field);
         
         if (status == END_DOCUMENT) {
             return status;
@@ -123,17 +144,6 @@ ParseStatus parse_record(Reader& reader, std::span<std::string_view> storage, st
     }
     
     assert(false);
-}
-
-void _parse(Reader& reader, std::span<std::string_view> storage, std::function<void(size_t, std::span<std::string_view>)> consumer) {
-    std::span<std::string_view> record;
-    size_t index = 0;
-    
-    while (parse_record(reader, storage, record) != END_DOCUMENT) {
-        consumer(index, record);
-        
-        ++index;
-    }
 }
 
 }

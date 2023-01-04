@@ -1,4 +1,4 @@
-#include "MemoryMappedReader.h"
+#include "FileMapper.h"
 
 #ifndef _WIN32
 #include <fcntl.h>
@@ -9,7 +9,7 @@
 #endif
 
 namespace ccsv {
-    MemoryMappedReader::MemoryMappedReader(const char* file_name) : StringReader() {
+FileMapper::FileMapper(const char* file_name) {
 #ifdef _WIN32
         file_handle = ::CreateFileA(file_name, GENERIC_READ, 0, NULL, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
 
@@ -66,7 +66,7 @@ namespace ccsv {
 #endif
     }
 
-    MemoryMappedReader::~MemoryMappedReader() {
+    FileMapper::~FileMapper() {
 #ifdef _WIN32
         if (map_handle != INVALID_HANDLE_VALUE) {
             if (data.data() != nullptr) {
@@ -94,7 +94,7 @@ namespace ccsv {
 #endif
     }
 
-bool MemoryMappedReader::good() {
+bool FileMapper::good() {
 #ifdef _WIN32
         return (file_handle != INVALID_HANDLE_VALUE) && (map_handle != INVALID_HANDLE_VALUE);
 #endif
