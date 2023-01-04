@@ -1,4 +1,4 @@
-#include "MemoryMappedReader.h"
+#include "FileMapper.h"
 
 #ifndef _WIN32
 #include <fcntl.h>

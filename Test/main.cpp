@@ -1,8 +1,7 @@
-#include <StringReader.h>
 #include <Parser.h>
 #include <assert.h>
 #include <iostream>
-#include <MemoryMappedReader.h>
+#include <FileMapper.h>
 #include <fstream>
 
 void test_record() {
