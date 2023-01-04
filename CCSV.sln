@@ -6,9 +6,6 @@ MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "CCSVLib", "CCSVLib\CCSVLib.vcxproj", "{A06B19AF-B7C6-405E-9AFC-D613B23B7DFC}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Test", "Test\Test.vcxproj", "{A8FE34FE-3256-41E6-8738-03DADCCA6C39}"
-	ProjectSection(ProjectDependencies) = postProject
-		{A06B19AF-B7C6-405E-9AFC-D613B23B7DFC} = {A06B19AF-B7C6-405E-9AFC-D613B23B7DFC}
-	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

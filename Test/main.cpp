@@ -174,7 +174,11 @@ void test_memory_map_reader() {
     const char* file_name = "__test.csv";
 
     {
-        std::ofstream test_file(file_name);
+        /*
+        Use binary mode. Else in Windows the \n will be replaced by \r\n causing
+        the lines to end with \r\r\n.
+        */
+        std::ofstream test_file(file_name, std::ios::binary);
 
         test_file << str;
     } //Closes file
