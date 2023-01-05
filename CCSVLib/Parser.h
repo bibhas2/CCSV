@@ -3,6 +3,7 @@
 #include <string_view>
 #include <functional>
 #include <span>
+#include <charconv>
 
 /**
  A non-allocating CSV parser that follows https://www.rfc-editor.org/rfc/rfc4180
@@ -58,4 +59,16 @@ struct Parser
     }
 };
 
+std::string_view trim(const std::string_view& str);
+
+#ifndef __clang__
+template <typename T>
+bool parse_number(std::string_view bytes, T& n) {
+    auto tr = ccsv::trim(bytes);
+
+    auto result = std::from_chars(tr.data(), tr.data() + tr.length(), n);
+
+    return result.ec == std::errc();
+}
+#endif
 }

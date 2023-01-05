@@ -216,6 +216,42 @@ void test_memory_map_reader() {
     std::remove(file_name);
 }
 
+void test_parse_number() {
+#ifndef __clang__
+    auto str =
+        "0.025717778,-2.3285230e-002,-1.4653762e-002\r\n"
+ "  0.036717778, -3.4285230e-002 ,-10.4653762e-002 \r\n";
+
+    ccsv::Parser parser;
+    double total = 0.0;
+
+    parser.parse<3>(str, [&total] (auto index, auto fields) {
+        assert(index < 2);
+
+        double n1 = 0.0;
+        double n2 = 0.0;
+        double n3 = 0.0;
+
+        assert(ccsv::parse_number(fields[0], n1));
+        assert(ccsv::parse_number(fields[1], n2));
+        assert(ccsv::parse_number(fields[2], n3));
+
+        total += n1 + n2 + n3;
+    });
+
+    assert(fabs(total - (-0.114442428)) < 0.0001);
+#endif
+}
+
+void test_trim() {
+    assert(ccsv::trim("abcd") == "abcd");
+    assert(ccsv::trim("  abcd") == "abcd");
+    assert(ccsv::trim("abcd  ") == "abcd");
+    assert(ccsv::trim("  abcd  ") == "abcd");
+    assert(ccsv::trim("  ") == "");
+    assert(ccsv::trim("") == "");
+}
+
 int main() {
     std::cout << "Running tests..." << std::endl;
 
@@ -227,7 +263,9 @@ int main() {
     test_empty_line();
     test_space();
     test_memory_map_reader();
-    
+    test_parse_number();
+    test_trim();
+
     std::cout << "All tests passed." << std::endl;
 
     return 0;

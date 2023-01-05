@@ -146,5 +146,16 @@ ParseStatus Parser::parse_record(const std::string_view& data, std::span<std::st
     assert(false);
 }
 
+std::string_view trim(const std::string_view& str) {
+    size_t start = str.find_first_not_of(" \t");
+    size_t end = str.find_last_not_of(" \t");
+
+    if (start == std::string_view::npos || end == std::string_view::npos) {
+        return std::string_view{ "" };
+    }
+
+    return str.substr(start, end - start + 1);
+}
+
 }
 
