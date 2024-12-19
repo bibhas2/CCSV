@@ -11,10 +11,11 @@ namespace ccsv {
     struct FileMapper
     {
 #ifdef _WIN32
+        //Note: The invalid values for these two handles
+        //are weieredly different
         HANDLE file_handle = INVALID_HANDLE_VALUE;
-        HANDLE map_handle = INVALID_HANDLE_VALUE;
-#endif
-#ifndef _WIN32
+        HANDLE map_handle = NULL;
+#else
         int file_handle = -1;
         size_t file_size = 0;
 #endif

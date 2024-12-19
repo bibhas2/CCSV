@@ -11,7 +11,7 @@
 namespace ccsv {
 FileMapper::FileMapper(const char* file_name) {
 #ifdef _WIN32
-        file_handle = ::CreateFileA(file_name, GENERIC_READ, 0, NULL, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+        file_handle = ::CreateFileA(file_name, GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
 
         if (file_handle == INVALID_HANDLE_VALUE)
         {
@@ -20,7 +20,7 @@ FileMapper::FileMapper(const char* file_name) {
 
         map_handle = ::CreateFileMappingA(file_handle, NULL, PAGE_READONLY, 0, 0, NULL);
 
-        if (map_handle == INVALID_HANDLE_VALUE)
+        if (map_handle == NULL)
         {
             return;
         }
@@ -68,14 +68,14 @@ FileMapper::FileMapper(const char* file_name) {
 
     FileMapper::~FileMapper() {
 #ifdef _WIN32
-        if (map_handle != INVALID_HANDLE_VALUE) {
+        if (map_handle != NULL) {
             if (data.data() != nullptr) {
                 ::UnmapViewOfFile(data.data());
             }
 
             ::CloseHandle(map_handle);
 
-            map_handle = INVALID_HANDLE_VALUE;
+            map_handle = NULL;
         }
         if (file_handle != INVALID_HANDLE_VALUE) {
             ::CloseHandle(file_handle);
@@ -96,9 +96,8 @@ FileMapper::FileMapper(const char* file_name) {
 
 bool FileMapper::good() {
 #ifdef _WIN32
-        return (file_handle != INVALID_HANDLE_VALUE) && (map_handle != INVALID_HANDLE_VALUE);
-#endif
-#ifndef _WIN32
+        return (file_handle != INVALID_HANDLE_VALUE) && (map_handle != NULL) && (data.data() != NULL);
+#else
         return (file_handle >= 0) && (data.data() != nullptr);
 #endif
 }
