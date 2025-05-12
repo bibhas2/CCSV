@@ -3,6 +3,7 @@
 #include <iostream>
 #include <FileMapper.h>
 #include <fstream>
+#include <math.h>
 
 void test_record() {
     auto str =
